@@ -1,0 +1,72 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$ref": "#/definitions/GalleryMeta",
+    "definitions": {
+        "GalleryMeta": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "gallery"
+                    ]
+                },
+                "title": {
+                    "type": "string"
+                },
+                "subTitles": {
+                    "type": "object",
+                    "properties": {
+                        "unknown": {
+                            "type": "string"
+                        },
+                        "zh-CN": {
+                            "type": "string"
+                        },
+                        "en-US": {
+                            "type": "string"
+                        },
+                        "jp": {
+                            "type": "string"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "description": {
+                    "type": "string"
+                },
+                "language": {
+                    "$ref": "#/definitions/ZHTLanguage"
+                },
+                "pageNumber": {
+                    "type": "number"
+                },
+                "files": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            },
+            "required": [
+                "description",
+                "files",
+                "language",
+                "pageNumber",
+                "subTitles",
+                "title",
+                "type"
+            ],
+            "additionalProperties": false
+        },
+        "ZHTLanguage": {
+            "type": "string",
+            "enum": [
+                "unknown",
+                "zh-CN",
+                "en-US",
+                "jp"
+            ]
+        }
+    }
+}
