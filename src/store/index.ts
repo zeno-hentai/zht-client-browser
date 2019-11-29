@@ -1,9 +1,9 @@
-import { localKeyStore } from './key';
+import { authStore } from './auth';
 import { ItemStore } from './item';
-export * from './key'
+export * from './auth'
 export * from './item'
 
 export const globalStores = {
-    localKeyStore,
+    localKeyStore: authStore,
     ItemStore
 }

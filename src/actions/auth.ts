@@ -1,101 +1,68 @@
-import { localKeyStore } from '../store/key';
+import { authStore } from '../store/auth';
 import { localKeyDataExists, loadLocalKeyData, generateLocalKeyData, clearLocalData } from '../localData/localStorage';
 import { zError } from './utils';
 import { RegisterInputStatus, LoginInputStatus } from '../types/input';
-import { ZHTClientAPI, ZHTDecryptedUserInfo } from 'zht-client-api';
-
-const client = new ZHTClientAPI({
-    baseURL: '/'
-})
+import { ZHTDecryptedUserInfo } from 'zht-client-api';
+import { client, zhtDB } from './base';
 
 function invalidStatus(reason?: string): never {
     if(!reason){
         reason = "Invalid Status"
     }
-    localKeyStore.error(reason)
+    authStore.error(reason)
     return zError(reason)
 }
 
-export function initializeLocalKeys(){
-    if(localKeyDataExists() && localKeyStore.status.status == 'NO_KEY' && !localKeyStore.status.error){
-        localKeyStore.initializeConfirmPassword()
+export async function authInit(){
+    if(localKeyDataExists()){
+        authStore.startInit()
     }else{
-        localKeyStore.initializeLogin()
+        authStore.startAuth()
     }
 }
 
-export function authDashboardSwapToLogin(){
-    localKeyStore.switchToLogin()
+export async function authFinishInit(localPassword: string){
+    const encInfo = await client.info()
+    const localKeyData = await loadLocalKeyData(localPassword)
+    if(!encInfo.authorized || encInfo.id !== localKeyData.userId){
+        return invalidStatus("Invalid Session")
+    }
+    const info: ZHTDecryptedUserInfo = {
+        ...encInfo,
+        privateKey: localKeyData.userPrivateKey
+    }
+    authStore.finishInit(localKeyData, info)
 }
 
-export function authDashboardSwapToRegister(){
-    localKeyStore.switchToRegister()
+export async function authLogin(loginInfo: LoginInputStatus) {
+    const info = await client.login(loginInfo)
+    authStore.updateAuthInfo(info)
 }
 
-export function inputRegisterInfo(registerInfo: RegisterInputStatus){
-    localKeyStore.inputRegisterInfo(registerInfo)
+export async function authRegister(registerInfo: RegisterInputStatus) {
+    const info = await client.register(registerInfo)
+    authStore.updateAuthInfo(info)
 }
 
-export function inputLoginInfo(loginInfo: LoginInputStatus){
-    localKeyStore.inputLoginInfo(loginInfo)
-}
-
-export async function authLogin(){
-    if(localKeyStore.status.status != 'INPUT_LOGIN_INFO') return invalidStatus()
-    const {username, password} = localKeyStore.status.loginInfo
-    const userInfo = await client.login({username, password})
-    localKeyStore.setUserInfo(userInfo)
-}
-
-export async function authRegister() {
-    if(localKeyStore.status.status != 'INPUT_REGISTER_INFO') return invalidStatus()
-    const {username, password, masterKey} = localKeyStore.status.registerInfo
-    const userInfo = await client.register({username, password, masterKey})
-    localKeyStore.setUserInfo(userInfo)
-}
-
-export function inputNewLocalPassword(password: string){
-    localKeyStore.inputNewPassword(password)
-}
-
-export function inputConfirmPassword(password: string){
-    localKeyStore.inputConfirmPassword(password)
-}
-
-export async function finishInitialization(){
-    if(localKeyStore.status.status != 'INPUT_NEW_PASSWORD') return invalidStatus()
-    const {userInfo, localPassword} = localKeyStore.status
-    await generateLocalKeyData(localPassword, {
-        userPrivateKey: userInfo.privateKey,
-        userId: userInfo.id
+export async function authFinishAuth(localPassword: string){
+    if(authStore.status.status !== 'UPDATE_USER_INFO') return invalidStatus()
+    const localKey = await generateLocalKeyData(localPassword, {
+        userPrivateKey: authStore.status.userInfo.privateKey,
+        userId: authStore.status.userInfo.id
     })
-    localKeyStore.setUserInfo(userInfo)
-}
-
-export async function finishConfirmation(){
-    if(localKeyStore.status.status != 'INPUT_CONFIRM_PASSWORD') return invalidStatus()
-    const localPassword = localKeyStore.status.localPassword
-    const onlineInfo = await client.info()
-    const localInfo = await loadLocalKeyData(localPassword)
-    if(!onlineInfo.authorized){
-        return invalidStatus("Session expired")
-    }
-    if(localInfo.userId != onlineInfo.id){
-        return invalidStatus("Invalid user id")
-    }
-    const userInfo: ZHTDecryptedUserInfo = {
-        ...onlineInfo,
-        privateKey: localInfo.userPrivateKey
-    }
-    localKeyStore.setUserInfo(userInfo)
+    authStore.finishAuth(localKey)
 }
 
 export async function authLogout(){
     await client.logout()
+    await zhtDB.delete()
     clearLocalData()
+    authStore.empty()
 }
 
 export async function deleteUser(){
     await client.deleteUser()
+    await zhtDB.delete()
     clearLocalData()
+    authStore.empty()
 }

@@ -25,38 +25,38 @@ export type ItemStatus = {
 }
 
 export class ItemStore {
-    @observable items: ItemStatus = {status: 'INITIALIZED'}
+    @observable status: ItemStatus = {status: 'INITIALIZED'}
     
     private error(message: string): never {
         throw new Error(message)
     }
 
     @action pullData(){
-        if(this.items.status !== 'INITIALIZED' && this.items.status !== 'LOADED_DATA'){
-            return this.error(`Invalid status: ${this.items.status}`)
+        if(this.status.status !== 'INITIALIZED' && this.status.status !== 'LOADED_DATA'){
+            return this.error(`Invalid status: ${this.status.status}`)
         }
-        this.items = {status: 'START_PULLING_DATA'}
+        this.status = {status: 'START_PULLING_DATA'}
     }
 
     @action updateTotal(total: number){
-        if(this.items.status !== 'START_PULLING_DATA'){
-            return this.error(`Invalid status: ${this.items.status}`)
+        if(this.status.status !== 'START_PULLING_DATA'){
+            return this.error(`Invalid status: ${this.status.status}`)
         }
-        this.items = {status: 'UPDATE_TOTAL', total}
+        this.status = {status: 'UPDATE_TOTAL', total}
     }
 
     @action updateProcess(progress: number){
-        if(this.items.status !== 'UPDATE_TOTAL' && this.items.status !== 'UPDATE_PROGRESS'){
-            return this.error(`Invalid status: ${this.items.status}`)
+        if(this.status.status !== 'UPDATE_TOTAL' && this.status.status !== 'UPDATE_PROGRESS'){
+            return this.error(`Invalid status: ${this.status.status}`)
         }
-        this.items = {status: 'UPDATE_PROGRESS', progress, total: this.items.total}
+        this.status = {status: 'UPDATE_PROGRESS', progress, total: this.status.total}
     }
 
     @action setItems(offset: number, limit: number, items: ListedItemIndex<any>[]) {
-        if(this.items.status != 'UPDATE_PROGRESS'){
-            return this.error(`Invalid status: ${this.items.status}`)
+        if(this.status.status !== 'UPDATE_PROGRESS'){
+            return this.error(`Invalid status: ${this.status.status}`)
         }
-        this.items = {status: 'LOADED_DATA', total: this.items.total, offset, limit, items}
+        this.status = {status: 'LOADED_DATA', total: this.status.total, offset, limit, items}
     }
 }
 
