@@ -1,7 +1,8 @@
 import Dexie from 'dexie';
-import { aesEncrypt, sha256Hash, ItemIndexData, ZHTBaseMeta, aesDecrypt, ItemTagData } from 'zht-client-api';
+import { aesEncrypt, sha256Hash, ItemIndexData, ZHTBaseMeta, aesDecrypt, ItemTagData, b64encode, b64decode } from 'zht-client-api';
 import { ListedItemIndex } from '../types';
 import { zError } from '../actions/utils';
+import { LocalKeyData } from './localStorage';
 
 export type ZhtItemData = { id: number } & (
     {
@@ -28,6 +29,12 @@ export interface ZhtTagData {
     itemId: number
 }
 
+export interface ZhtFileCache {
+    mappedName: string
+    itemId: number
+    encryptedData: string
+}
+
 export interface DBLimit {
     offset: number
     limit: number
@@ -42,16 +49,19 @@ export class ZHTDatabase extends Dexie {
     items: Dexie.Table<ZhtItemData, number>
     tags: Dexie.Table<ZhtTagData, number>
     files: Dexie.Table<ZhtFileData, [number, string]>
+    cachedFile: Dexie.Table<ZhtFileCache, string>
     constructor(dbName: string, version: number){
         super(dbName)
         this.version(version).stores({
             items: 'id,status,type,encryptedMeta,encryptedKey',
             tags: 'id,hashedTag,encryptedTag,itemId',
-            files: '[itemId+hashedFilename],itemId,hashedFilename,encryptedFileName,encryptedMappedFileName'
+            files: '[itemId+hashedFilename],itemId,hashedFilename,encryptedFileName,encryptedMappedFileName',
+            cachedFile: 'mappedName,itemId,encryptedData'
         })
         this.items = this.table("items")
         this.tags = this.table("tags")
         this.files = this.table("files")
+        this.cachedFile = this.table("cachedFile")
     }
 }
 
@@ -60,6 +70,9 @@ export interface ZHTDatabase {
     getItems({offset, limit}: DBLimit, {localKey, hashSalt}: DBKeys): Promise<ListedItemIndex<any>[]>
     queryItemsByTag(tags: string[], {offset, limit}: DBLimit, {localKey, hashSalt}: DBKeys): Promise<ListedItemIndex<any>[]>
     deleteItems(itemIds: number[]): Promise<void>
+    getItem(itemId: number, {localKey}: LocalKeyData): Promise<ListedItemIndex<any> | null>
+    getCachedFileOrNull(mappedName: string, {localKey, hashSalt}: DBKeys): Promise<ArrayBuffer | null>
+    putCachedFile(mappedName: string, itemId: number, data: ArrayBuffer, {localKey, hashSalt}: DBKeys): Promise<void>
     clearData(): Promise<void>
 }
 
@@ -95,7 +108,8 @@ ZHTDatabase.prototype.updateItems = async function(items: ListedItemIndex<any>[]
             })))
             await this.items.put(encryptedItem)
             await this.tags.where("id").noneOf(it.item.tags.map(t => t.id)).delete()
-            await this.files.where(["itemId", "hashedFilename"]).noneOf(files.map(({itemId, hashedFilename}) => [itemId, hashedFilename])).delete()
+            // await this.files.where(["itemId", "hashedFilename"]).noneOf(files.map(({itemId, hashedFilename}) => [itemId, hashedFilename])).delete()
+            // FIXME: Delete unneeded files
             for(let t of it.item.tags){
                 const encryptedTag: ZhtTagData = {
                     id: t.id,
@@ -135,7 +149,9 @@ async function convertItem(db: ZHTDatabase, it: ZhtItemData, localKey: string): 
     })))
     const files: {[key: string]: string} = {}
     for(let f of await db.files.where("itemId").equals(it.id).toArray()){
-        files[await aesDecrypt(f.encryptedFilename, localKey)] = await aesDecrypt(f.encryptedMappedFilename, localKey)
+        const name = await aesDecrypt(f.encryptedFilename, localKey)
+        const mappedName = await aesDecrypt(f.encryptedMappedFilename, localKey)
+        files[name] = mappedName
     }
     const item = {id: it.id, meta, key, tags}
     return {
@@ -145,6 +161,16 @@ async function convertItem(db: ZHTDatabase, it: ZhtItemData, localKey: string): 
         item,
         files
     }
+}
+
+ZHTDatabase.prototype.getItem = async function (itemId: number, {localKey}: LocalKeyData): Promise<ListedItemIndex<any> | null> {
+    return await this.transaction("r", [this.items, this.tags, this.files], async () => {
+        const item = await this.items.where("id").equals(itemId).first()
+        if(!item){
+            return null
+        }
+        return await convertItem(this, item, localKey)
+    })
 }
 
 ZHTDatabase.prototype.getItems = async function ({offset, limit}: DBLimit, {localKey}: DBKeys): Promise<ListedItemIndex<any>[]> {
@@ -170,14 +196,31 @@ ZHTDatabase.prototype.queryItemsByTag = async function(tags: string[], {offset, 
     })
 }
 
+ZHTDatabase.prototype.getCachedFileOrNull = async function (mappedName: string, {localKey}: DBKeys): Promise<ArrayBuffer | null>{
+    return await this.transaction("r", [this.cachedFile], async () => {
+        const cachedFile = await this.cachedFile.where("mappedName").equals(mappedName).first()
+        if(!cachedFile){
+            return null
+        }
+        return b64decode(await aesDecrypt(cachedFile.encryptedData, localKey))
+    })
+}
+ZHTDatabase.prototype.putCachedFile = async function (mappedName: string, itemId: number, data: ArrayBuffer, {localKey}: DBKeys): Promise<void>{
+    const encryptedData = await aesEncrypt(b64encode(data), localKey)
+    await this.transaction("rw", [this.cachedFile], async () => {
+        await this.cachedFile.put({mappedName, itemId, encryptedData})
+    })
+}
+
 ZHTDatabase.prototype.deleteItems = async function (itemIds: number[]): Promise<void> {
     if(this.hasBeenClosed()){
         await this.open()
     }
-    await this.transaction('rw', [this.items, this.tags, this.files], async () => {
+    await this.transaction('rw', [this.items, this.tags, this.files, this.cachedFile], async () => {
         await this.items.where("id").anyOf(itemIds).delete()
         await this.tags.where("itemId").anyOf(itemIds).delete()
         await this.files.where("itemId").anyOf(itemIds).delete()
+        await this.cachedFile.where("itemId").anyOf(itemIds).delete()
     })
 }
 
@@ -185,9 +228,10 @@ ZHTDatabase.prototype.clearData = async function (): Promise<void> {
     if(this.hasBeenClosed()){
         await this.open()
     }
-    await this.transaction('rw', [this.items, this.tags, this.files], async () => {
+    await this.transaction('rw', [this.items, this.tags, this.files, this.cachedFile], async () => {
         await this.items.toCollection().delete()
         await this.tags.toCollection().delete()
         await this.files.toCollection().delete()
+        await this.cachedFile.toCollection().delete()
     })
 }

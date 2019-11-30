@@ -82,6 +82,11 @@ export class AuthStore {
         return this.status.userInfo
     }
 
+    @computed get localKey(): LocalKeyData {
+        if(this.status.status !== 'DONE') return this.error()
+        return this.status.localKey
+    }
+
 }
 
 export const authStore = new AuthStore()

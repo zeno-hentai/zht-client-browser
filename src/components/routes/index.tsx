@@ -4,6 +4,7 @@ import { Home } from './Home/index';
 import { createHashHistory } from 'history';
 import { DashboardRoute } from './Dashboard/index';
 import { CreateTaskDialog } from '../CreateTaskDialog';
+import { ItemViewer } from './ItemViewer';
 
 export const zhtHistory = createHashHistory()
 
@@ -13,6 +14,7 @@ export const ZHTRootRoute = () => (
         <Route path="/">
             <Route path="/" exact component={Home} />
             <Route path="/dashboard" component={DashboardRoute} />
+            <Route path="/view/:id" component={ItemViewer} />
         </Route>
     </Router>
 )

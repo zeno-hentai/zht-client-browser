@@ -47,13 +47,13 @@ const Toolbar = (props: ManageListProps) => (
 
 export const ManageList = (props: ManageListProps) => (
     <div>
-        <Toolbar {...props}/>
         <Card>
             <CardContent>
                 <Typography variant="h2" gutterBottom>{props.title}</Typography>
             </CardContent>
         </Card>
         {props.children}
+        <Toolbar {...props}/>
     </div>
 )
 

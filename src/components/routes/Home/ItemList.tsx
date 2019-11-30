@@ -7,6 +7,7 @@ import MenuIcon from '@material-ui/icons/Menu';
 import { HomeMenu } from './HomeMenu';
 import { showCreateTaskDialog } from '../../CreateTaskDialog';
 import { itemStore } from '../../../store';
+import { ItemListDisabled, ItemListThumbnail } from './ItemListItem';
 
 const buttonBoxStyle: CSSProperties = {
     position: 'fixed',
@@ -45,9 +46,24 @@ const ButtonBox = () => {
     </div>)
 }
 
+const ItemListBody = observer(() => (
+    itemStore.status.status !== 'LOADED_DATA' ? <div>Loading...</div> :
+    <Grid container>
+        {itemStore.status.items.map(it => 
+            <Grid item xs={3} key={it.id} style={{padding: '0.5rem'}}>
+            {
+                it.status !== 'OK' ?
+                <ItemListDisabled id={it.id} status={it.status}/> :
+                <ItemListThumbnail item={it.item} files={it.files}/>
+            }
+            </Grid>
+        )}
+    </Grid>
+))
+
 export const ItemList = observer(() => (
     <div>
+        <ItemListBody/>
         <ButtonBox/>
-        {JSON.stringify(itemStore.status.status==='LOADED_DATA' && itemStore.status.items)}
     </div>
 ))

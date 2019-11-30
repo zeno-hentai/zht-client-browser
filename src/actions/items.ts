@@ -43,6 +43,8 @@ export async function pullItemsData(tags: string[], offset: number, limit: numbe
     itemStore.updateTotal(total)
     const itemIdList = await client.updatedItemIdsAfter(lastUpdate)
     itemStore.updateProcess(0)
+    const deletedItemId = await client.deletedItemIdsAfter(lastUpdate)
+    await zhtDB.deleteItems(deletedItemId)
     await Promise.all(chunk(itemIdList, UPDATE_CHUNK).map(async (chunk, idx, {length}) => {
         itemStore.updateProcess(idx / length)
         const items = await Promise.all(chunk.map(async id => {
@@ -57,6 +59,14 @@ export async function pullItemsData(tags: string[], offset: number, limit: numbe
         zhtDB.getItems({offset, limit}, currentStatus.localKey): 
         zhtDB.queryItemsByTag([], {offset, limit}, currentStatus.localKey)
     )
-    itemStore.setItems(offset, limit, items)
+    itemStore.setItems(offset, limit, tags, items)
     saveUpdateTimeStamp(thisUpdate)
+}
+
+export async function deleteItem(itemId: number){
+    await client.deleteItem(itemId)
+    if(itemStore.status.status === 'LOADED_DATA'){
+        const {tags, offset, limit} = itemStore.status
+        await pullItemsData(tags, offset, limit)
+    }
 }

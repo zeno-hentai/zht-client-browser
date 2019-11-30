@@ -1,14 +1,12 @@
-import React from 'react'
-import { ZHTItemViewer, ZHTItemViewerOptions } from '../../../types/viewer';
+import { ZHTItemViewer } from '../../../types/viewer';
 import { GalleryMeta } from 'zht-client-api';
+import {GalleryThumbnail as Thumbnail} from './GalleryThumbnail'
+import {GalleryViewer as Viewer} from './GalleryViewer'
 import schema from './schema.json'
-
-const Viewer = (props: ZHTItemViewerOptions<GalleryMeta>) => {
-    return <div/>
-}
 
 export const GalleryViewer: ZHTItemViewer<GalleryMeta> = {
     type: "gallery",
     schema: () => schema,
+    Thumbnail,
     Viewer
 }

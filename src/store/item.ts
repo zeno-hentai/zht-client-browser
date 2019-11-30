@@ -21,6 +21,7 @@ export type ItemStatus = {
     offset: number,
     limit: number,
     total: number,
+    tags: string[],
     items: ListedItemIndex<any>[]
 }
 
@@ -52,11 +53,11 @@ export class ItemStore {
         this.status = {status: 'UPDATE_PROGRESS', progress, total: this.status.total}
     }
 
-    @action setItems(offset: number, limit: number, items: ListedItemIndex<any>[]) {
+    @action setItems(offset: number, limit: number, tags: string[], items: ListedItemIndex<any>[]) {
         if(this.status.status !== 'UPDATE_PROGRESS'){
             return this.error(`Invalid status: ${this.status.status}`)
         }
-        this.status = {status: 'LOADED_DATA', total: this.status.total, offset, limit, items}
+        this.status = {status: 'LOADED_DATA', total: this.status.total, tags, offset, limit, items}
     }
 }
 
