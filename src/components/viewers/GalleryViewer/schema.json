@@ -55,6 +55,9 @@
                     "additionalProperties": {
                         "type": "string"
                     }
+                },
+                "preview": {
+                    "type": "string"
                 }
             },
             "required": [
@@ -62,6 +65,7 @@
                 "files",
                 "language",
                 "pageNumber",
+                "preview",
                 "source",
                 "subTitles",
                 "title",

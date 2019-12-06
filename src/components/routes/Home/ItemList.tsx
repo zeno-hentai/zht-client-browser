@@ -1,6 +1,6 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { observer, useObserver, useLocalStore } from 'mobx-react'
-import { Fab, Grid } from '@material-ui/core'
+import { Fab, Grid, TextField, Typography } from '@material-ui/core'
 import { CSSProperties } from '@material-ui/styles'
 import AddIcon from '@material-ui/icons/Add';
 import MenuIcon from '@material-ui/icons/Menu';
@@ -8,6 +8,7 @@ import { HomeMenu } from './HomeMenu';
 import { showCreateTaskDialog } from '../../CreateTaskDialog';
 import { itemStore } from '../../../store';
 import { ItemListDisabled, ItemListThumbnail } from './ItemListItem';
+import { toSearchPage } from '../../../actions/search';
 
 const buttonBoxStyle: CSSProperties = {
     position: 'fixed',
@@ -61,9 +62,34 @@ const ItemListBody = observer(() => (
     </Grid>
 ))
 
+const SearchBar = () => {
+    const [searchText, setSearchText] = useState("")
+    useEffect(() => {
+        if(itemStore.status.status === 'LOADED_DATA'){
+            setSearchText(itemStore.status.tags.join(" "))
+        }
+    }, [])
+    return <Grid container>
+        <Grid item xs={12}>
+            <TextField
+                fullWidth
+                value={searchText}
+                onChange={evt => setSearchText(evt.target.value)}
+                onKeyDown={evt => {
+                    if(evt.keyCode === 13){
+                        toSearchPage(searchText)
+                    }
+                }}
+            />
+        </Grid>
+    </Grid>
+}
+
 export const ItemList = observer(() => (
     <div>
+        <SearchBar/>
         <ItemListBody/>
         <ButtonBox/>
+        <Typography>End of Page</Typography>
     </div>
 ))

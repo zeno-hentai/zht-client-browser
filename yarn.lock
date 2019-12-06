@@ -1602,11 +1602,6 @@
   resolved "https://registry.yarnpkg.com/@types/chai/-/chai-4.2.5.tgz#f8da153ebbe30babb0adc9a528b9ad32be3175a2"
   integrity sha512-YvbLiIc0DbbhiANrfVObdkLEHJksQZVq0Uvfg550SRAKVYaEJy+V70j65BVe2WNp6E3HtKsUczeijHFCjba3og==
 
-"@types/crypto-js@^3.1.43":
-  version "3.1.43"
-  resolved "https://registry.yarnpkg.com/@types/crypto-js/-/crypto-js-3.1.43.tgz#b859347d6289ba13e347c335a4c9efa63337a748"
-  integrity sha512-EHe/YKctU3IYNBsDmSOPX/7jLHPRlx8WaiDKSY9JCTnJ8XJeM4c0ZJvx+9Gxmr2s2ihI92R+3U/gNL1sq5oRuQ==
-
 "@types/eslint-visitor-keys@^1.0.0":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@types/eslint-visitor-keys/-/eslint-visitor-keys-1.0.0.tgz#1ee30d79544ca84d68d4b3cdb0af4f205663dd2d"
@@ -1687,6 +1682,11 @@
   version "10.17.6"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-10.17.6.tgz#1aaabd6f6470a6ac3824ab1e94d731ca1326d93d"
   integrity sha512-0a2X6cgN3RdPBL2MIlR6Lt0KlM7fOFsutuXcdglcOq6WvLnYXgPQSh0Mx6tO1KCAE8MxbHSOSTWDoUxRq+l3DA==
+
+"@types/pako@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@types/pako/-/pako-1.0.1.tgz#33b237f3c9aff44d0f82fe63acffa4a365ef4a61"
+  integrity sha512-GdZbRSJ3Cv5fiwT6I0SQ3ckeN2PWNqxd26W9Z2fCK1tGrrasGy4puvNFtnddqH9UJFMQYXxEuuB7B8UK+LLwSg==
 
 "@types/prop-types@*":
   version "15.7.3"
@@ -3423,11 +3423,6 @@ crypto-browserify@^3.11.0:
     public-encrypt "^4.0.0"
     randombytes "^2.0.0"
     randomfill "^1.0.3"
-
-crypto-js@^3.1.9-1:
-  version "3.1.9-1"
-  resolved "https://registry.yarnpkg.com/crypto-js/-/crypto-js-3.1.9-1.tgz#fda19e761fc077e01ffbfdc6e9fdfc59e8806cd8"
-  integrity sha1-/aGedh/Ad+Af+/3G6f38WeiAbNg=
 
 css-blank-pseudo@^0.1.4:
   version "0.1.4"
@@ -7940,7 +7935,7 @@ package-hash@^3.0.0:
     lodash.flattendeep "^4.4.0"
     release-zalgo "^1.0.0"
 
-pako@~1.0.5:
+pako@^1.0.10, pako@~1.0.5:
   version "1.0.10"
   resolved "https://registry.yarnpkg.com/pako/-/pako-1.0.10.tgz#4328badb5086a426aa90f541977d4955da5c9732"
   integrity sha512-0DTvPVU3ed8+HNXOu5Bs+o//Mbdj9VNQMUOe9oKCwh8l0GNwpTDMKCWbRjgtD291AWnkAgkqA/LOnQS8AmS1tw==
@@ -11533,29 +11528,29 @@ yn@^3.0.0:
   resolved "https://registry.yarnpkg.com/yn/-/yn-3.1.1.tgz#1e87401a09d767c1d5eab26a6e4c185182d2eb50"
   integrity sha512-Ux4ygGWsu2c7isFWe8Yu1YluJmqVhxqK2cLXNQA5AcC3QfbGNpM7fu0Y8b/z16pXLnFxZYvWhd3fhBY9DLmC6Q==
 
-zht-client-api@0.0.25:
-  version "0.0.25"
-  resolved "https://registry.yarnpkg.com/zht-client-api/-/zht-client-api-0.0.25.tgz#35df8937e3e63e5aef9c3e4df774efc1dd5389a8"
-  integrity sha512-8RwU2aNCpNR5bSDge/KiVN+MrUeC0fa4fDbnsQ/OE9Jc5kHf00OCQlwiKI6QM8BKxl1Bl8SZCt6sko45/Z2HUw==
+zht-client-api@0.0.29:
+  version "0.0.29"
+  resolved "https://registry.yarnpkg.com/zht-client-api/-/zht-client-api-0.0.29.tgz#09f4a49542f0a1713803b06c6b57fbd4498d133f"
+  integrity sha512-vPSMC/0RP/DmeeR9zpM25h1HEsErXpdykd6vyrVVWzjQyGCPKhnDSEnMaNOHmKc+ZndzW68zbne978wlyAK0PA==
   dependencies:
     "@peculiar/webcrypto" "^1.0.21"
     "@types/axios" "^0.14.0"
     "@types/base64-arraybuffer" "^0.1.0"
     "@types/chai" "^4.2.5"
-    "@types/crypto-js" "^3.1.43"
     "@types/jszip" "^3.1.6"
     "@types/mocha" "^5.2.7"
     "@types/moment" "^2.13.0"
+    "@types/pako" "^1.0.1"
     "@types/uuid" "^3.4.6"
     "@types/ws" "^6.0.3"
     axios "^0.19.0"
     base64-arraybuffer "^0.2.0"
     browser-env "^3.3.0"
     chai "^4.2.0"
-    crypto-js "^3.1.9-1"
     mocha "^6.2.2"
     moment "^2.24.0"
     nyc "^14.1.1"
+    pako "^1.0.10"
     ts-node "^8.5.2"
     tsconfig-paths "^3.9.0"
     typescript "^3.7.2"

@@ -1,4 +1,4 @@
-import { aesGenKey, aesEncrypt, sha256Hash, aesDecrypt } from 'zht-client-api';
+import { aesGenKey, aesEncrypt, sha256Hash, aesDecrypt, aesEncryptWrapped, aesDecryptWrapped } from 'zht-client-api';
 import uuid from 'uuid'
 import moment, { Moment } from 'moment';
 
@@ -24,7 +24,7 @@ export async function generateLocalKeyData(localPassword: string, {userPrivateKe
     const keyData: LocalKeyData = {localKey, hashSalt, userId, userPrivateKey}
     const encryptKey = await sha256Hash(`${localPassword}:${keySalt}`)
     localStorage[KEY_SALT_NAME] = keySalt
-    localStorage[KEY_DATA_NAME] = await aesEncrypt(JSON.stringify(keyData), encryptKey)
+    localStorage[KEY_DATA_NAME] = await aesEncryptWrapped(JSON.stringify(keyData), encryptKey)
     localStorage.removeItem(TS_NAME)
     return keyData
 }
@@ -39,7 +39,7 @@ export async function loadLocalKeyData(localPassword: string): Promise<LocalKeyD
         throw new Error(`Invalid content of: ${KEY_DATA_NAME}`)
     }
     const encryptKey = await sha256Hash(`${localPassword}:${keySalt}`)
-    let decryptedJSON = await aesDecrypt(keyData, encryptKey)
+    let decryptedJSON = await aesDecryptWrapped(keyData, encryptKey)
     return JSON.parse(decryptedJSON)
 }
 

@@ -28,7 +28,7 @@
     "typeface-roboto": "^0.0.75",
     "typescript": "3.7.2",
     "uuid": "^3.3.3",
-    "zht-client-api": "0.0.25"
+    "zht-client-api": "0.0.29"
   },
   "scripts": {
     "start": "react-scripts start",

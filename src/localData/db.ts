@@ -1,8 +1,9 @@
 import Dexie from 'dexie';
-import { aesEncrypt, sha256Hash, ItemIndexData, ZHTBaseMeta, aesDecrypt, ItemTagData, b64encode, b64decode } from 'zht-client-api';
+import { aesEncrypt, sha256Hash, ItemIndexData, ZHTBaseMeta, aesDecrypt, ItemTagData, b64encode, b64decode, aesEncryptWrapped, aesDecryptWrapped } from 'zht-client-api';
 import { ListedItemIndex } from '../types';
 import { zError } from '../actions/utils';
 import { LocalKeyData } from './localStorage';
+import { sum, intersection } from 'lodash'
 
 export type ZhtItemData = { id: number } & (
     {
@@ -32,7 +33,13 @@ export interface ZhtTagData {
 export interface ZhtFileCache {
     mappedName: string
     itemId: number
-    encryptedData: string
+    encryptedData: ArrayBuffer
+}
+
+export interface ZhtFileCacheSize {
+    mappedName: string
+    itemId: number
+    size: number
 }
 
 export interface DBLimit {
@@ -50,18 +57,21 @@ export class ZHTDatabase extends Dexie {
     tags: Dexie.Table<ZhtTagData, number>
     files: Dexie.Table<ZhtFileData, [number, string]>
     cachedFile: Dexie.Table<ZhtFileCache, string>
+    cachedFileSize: Dexie.Table<ZhtFileCacheSize, number>
     constructor(dbName: string, version: number){
         super(dbName)
         this.version(version).stores({
             items: 'id,status,type,encryptedMeta,encryptedKey',
             tags: 'id,hashedTag,encryptedTag,itemId',
             files: '[itemId+hashedFilename],itemId,hashedFilename,encryptedFileName,encryptedMappedFileName',
-            cachedFile: 'mappedName,itemId,encryptedData'
+            cachedFile: 'mappedName,itemId,size,encryptedData',
+            cachedFileSize: '&mappedName,itemId,size'
         })
         this.items = this.table("items")
         this.tags = this.table("tags")
         this.files = this.table("files")
         this.cachedFile = this.table("cachedFile")
+        this.cachedFileSize = this.table("cachedFileSize")
     }
 }
 
@@ -71,7 +81,10 @@ export interface ZHTDatabase {
     queryItemsByTag(tags: string[], {offset, limit}: DBLimit, {localKey, hashSalt}: DBKeys): Promise<ListedItemIndex<any>[]>
     deleteItems(itemIds: number[]): Promise<void>
     getItem(itemId: number, {localKey}: LocalKeyData): Promise<ListedItemIndex<any> | null>
+    getFileCacheSize(itemId: number): Promise<number>
+    pruneFileCache(itemId: number): Promise<void>
     getCachedFileOrNull(mappedName: string, {localKey, hashSalt}: DBKeys): Promise<ArrayBuffer | null>
+    cachedFileExists(mappedName: string): Promise<boolean>
     putCachedFile(mappedName: string, itemId: number, data: ArrayBuffer, {localKey, hashSalt}: DBKeys): Promise<void>
     clearData(): Promise<void>
 }
@@ -91,8 +104,8 @@ ZHTDatabase.prototype.updateItems = async function(items: ListedItemIndex<any>[]
                 })
                 continue
             }
-            const encryptedMeta = await aesEncrypt(JSON.stringify(it.item.meta), localKey)
-            const encryptedKey = await aesEncrypt(it.item.key, localKey)
+            const encryptedMeta = await aesEncryptWrapped(JSON.stringify(it.item.meta), localKey)
+            const encryptedKey = await aesEncryptWrapped(it.item.key, localKey)
             const encryptedItem: ZhtItemData = {
                 id: it.id,
                 status: 'OK',
@@ -103,8 +116,8 @@ ZHTDatabase.prototype.updateItems = async function(items: ListedItemIndex<any>[]
             const files: ZhtFileData[] = await Promise.all(Object.entries(it.files).map(async ([fe, fm]) => ({
                 itemId: it.id,
                 hashedFilename: await sha256Hash(`${fe}:${hashSalt}`),
-                encryptedFilename: await aesEncrypt(fe, localKey),
-                encryptedMappedFilename: await aesEncrypt(fm, localKey)
+                encryptedFilename: await aesEncryptWrapped(fe, localKey),
+                encryptedMappedFilename: await aesEncryptWrapped(fm, localKey)
             })))
             await this.items.put(encryptedItem)
             await this.tags.where("id").noneOf(it.item.tags.map(t => t.id)).delete()
@@ -113,7 +126,7 @@ ZHTDatabase.prototype.updateItems = async function(items: ListedItemIndex<any>[]
             for(let t of it.item.tags){
                 const encryptedTag: ZhtTagData = {
                     id: t.id,
-                    encryptedTag: await aesEncrypt(t.tag, localKey),
+                    encryptedTag: await aesEncryptWrapped(t.tag, localKey),
                     hashedTag: await sha256Hash(`${t.tag}:${hashSalt}`),
                     itemId: it.id
                 }
@@ -140,17 +153,17 @@ async function convertItem(db: ZHTDatabase, it: ZhtItemData, localKey: string): 
     }else if(it.status !== 'OK'){
         return zError("Unknown error.")
     }
-    const meta: ZHTBaseMeta<any> = JSON.parse(await aesDecrypt(it.encryptedMeta, localKey))
-    const key = await aesDecrypt(it.encryptedKey, localKey)
+    const meta: ZHTBaseMeta<any> = JSON.parse(await aesDecryptWrapped(it.encryptedMeta, localKey))
+    const key = await aesDecryptWrapped(it.encryptedKey, localKey)
     const tagsCur = await db.tags.where("itemId").equals(it.id).toArray()
     const tags: ItemTagData[] = await Promise.all(tagsCur.map(async t => ({
         id: t.id,
-        tag: await aesDecrypt(t.encryptedTag, localKey)
+        tag: await aesDecryptWrapped(t.encryptedTag, localKey)
     })))
     const files: {[key: string]: string} = {}
     for(let f of await db.files.where("itemId").equals(it.id).toArray()){
-        const name = await aesDecrypt(f.encryptedFilename, localKey)
-        const mappedName = await aesDecrypt(f.encryptedMappedFilename, localKey)
+        const name = await aesDecryptWrapped(f.encryptedFilename, localKey)
+        const mappedName = await aesDecryptWrapped(f.encryptedMappedFilename, localKey)
         files[name] = mappedName
     }
     const item = {id: it.id, meta, key, tags}
@@ -189,10 +202,18 @@ ZHTDatabase.prototype.queryItemsByTag = async function(tags: string[], {offset, 
     }
     const hashedTags = await Promise.all(tags.map(t => sha256Hash(`${t}:${hashSalt}`)))
     return await this.transaction("r", [this.items, this.tags, this.files], async () => {
-        const matchedTags = await this.tags.where("hashed").anyOf(hashedTags).toArray()
-        const itemIdList = matchedTags.map(t => t.itemId)
-        const matchedItems = await this.items.where("id").anyOf(itemIdList).offset(offset).limit(limit).toArray()
+        const matchedTags: ZhtTagData[][] = await Promise.all(hashedTags.map(t => this.tags.where("hashedTag").equals(t).toArray()))
+        const matchedItemId: number[][] = matchedTags.map(tl => tl.map(t => t.itemId))
+        const targetItemId: number[] = intersection(...matchedItemId)
+        const matchedItems = await this.items.where("id").anyOf(targetItemId).offset(offset).limit(limit).toArray()
         return await Promise.all(matchedItems.map(it => convertItem(this, it, localKey)))
+    })
+}
+
+ZHTDatabase.prototype.cachedFileExists = async function (mappedName: string): Promise<boolean> {
+    return await this.transaction("r", [this.cachedFile], async () => {
+        const ct = await this.cachedFile.where('mappedName').equals(mappedName).count()
+        return ct != 0
     })
 }
 
@@ -202,13 +223,17 @@ ZHTDatabase.prototype.getCachedFileOrNull = async function (mappedName: string, 
         if(!cachedFile){
             return null
         }
-        return b64decode(await aesDecrypt(cachedFile.encryptedData, localKey))
+        return await aesDecrypt(cachedFile.encryptedData, localKey)
     })
 }
 ZHTDatabase.prototype.putCachedFile = async function (mappedName: string, itemId: number, data: ArrayBuffer, {localKey}: DBKeys): Promise<void>{
-    const encryptedData = await aesEncrypt(b64encode(data), localKey)
-    await this.transaction("rw", [this.cachedFile], async () => {
+    const encryptedData = await aesEncrypt(data, localKey)
+    const size = encryptedData.byteLength
+    await this.transaction("rw", [this.cachedFile, this.cachedFileSize], async () => {
         await this.cachedFile.put({mappedName, itemId, encryptedData})
+        await this.cachedFileSize.put({
+            mappedName, itemId, size
+        })
     })
 }
 
@@ -216,11 +241,12 @@ ZHTDatabase.prototype.deleteItems = async function (itemIds: number[]): Promise<
     if(this.hasBeenClosed()){
         await this.open()
     }
-    await this.transaction('rw', [this.items, this.tags, this.files, this.cachedFile], async () => {
+    await this.transaction('rw', [this.items, this.tags, this.files, this.cachedFile, this.cachedFileSize], async () => {
         await this.items.where("id").anyOf(itemIds).delete()
         await this.tags.where("itemId").anyOf(itemIds).delete()
         await this.files.where("itemId").anyOf(itemIds).delete()
         await this.cachedFile.where("itemId").anyOf(itemIds).delete()
+        await this.cachedFileSize.where("itemId").anyOf(itemIds).delete()
     })
 }
 
@@ -228,10 +254,25 @@ ZHTDatabase.prototype.clearData = async function (): Promise<void> {
     if(this.hasBeenClosed()){
         await this.open()
     }
-    await this.transaction('rw', [this.items, this.tags, this.files, this.cachedFile], async () => {
+    await this.transaction('rw', [this.items, this.tags, this.files, this.cachedFile, this.cachedFileSize], async () => {
         await this.items.toCollection().delete()
         await this.tags.toCollection().delete()
         await this.files.toCollection().delete()
         await this.cachedFile.toCollection().delete()
+        await this.cachedFileSize.toCollection().delete()
+    })
+}
+
+ZHTDatabase.prototype.getFileCacheSize = async function (itemId: number): Promise<number> {
+    return await this.transaction("r", this.cachedFileSize, async () => {
+        const rec = await this.cachedFileSize.where('itemId').equals(itemId).toArray()
+        return sum(rec.map(r => r.size))
+    })
+}
+
+ZHTDatabase.prototype.pruneFileCache = async function (itemId: number): Promise<void> {
+    await this.transaction("rw", [this.cachedFile, this.cachedFileSize], async () => {
+        await this.cachedFile.where('itemId').equals(itemId).delete()
+        await this.cachedFileSize.where('itemId').equals(itemId).delete()
     })
 }

@@ -66,6 +66,7 @@ interface ManageListItemProps {
     onDelete(): void
     onEnter?(): void
     children: ReactNode | ReactNode[]
+    buttons?: ReactNode
 }
 
 export const ManageListItem = (props: ManageListItemProps) => (
@@ -77,6 +78,7 @@ export const ManageListItem = (props: ManageListItemProps) => (
         </CardActionArea>
         <CardActions>
             <Button onClick={props.onDelete}>{props.deleteText || "DELETE"}</Button>
+            {props.buttons}
         </CardActions>
     </Card>
 )

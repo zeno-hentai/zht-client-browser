@@ -62,6 +62,8 @@ const store = new TokenStore()
 
 async function createToken(title: string){
     const token = await client.createToken(title)
+    const publicKeySig = await sha256Hash(authStore.userInfo.publicKey)
+    token.token = `${publicKeySig.slice(0, 15)}:${token.token}`
     store.addToken(token)
     await loadTokens()
 }
@@ -82,8 +84,7 @@ const CreatedTokenListItem = ({item}: {item: APITokenCreateResponse}) => {
     const [show, setShow] = useState(false)
     return <ManageListItem onDelete={() => deleteToken(item.id)} onEnter={async () => {
         const publicKeySig = await sha256Hash(authStore.userInfo.publicKey)
-        const text = `${publicKeySig.slice(0, 15)}:${item.token}`
-        await navigator.clipboard.writeText(text)
+        await navigator.clipboard.writeText(item.token)
         setShow(true)
     }}>
         <Typography>{item.title}</Typography>

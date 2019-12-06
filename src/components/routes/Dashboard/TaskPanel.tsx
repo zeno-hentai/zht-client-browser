@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { Typography } from '@material-ui/core'
+import { Typography, Button } from '@material-ui/core'
 import { ManageList, ManageListItem } from './ManageList'
 import { showCreateTaskDialog } from '../../CreateTaskDialog'
 import { client } from '../../../actions/base'
@@ -38,12 +38,22 @@ async function deleteTask(id: number){
     await loadTasks()
 }
 
+const TaskPanelBodyButtons = (task: WorkerTaskInfo) => {
+    const retry = async () => {
+        await client.retryWorkerTask(task.id, authStore.privateKey, authStore.userInfo.publicKey)
+        await loadTasks()
+    }
+    return <div>
+        {task.status === 'FAILED' ? <Button onClick={retry}>Retry</Button> : null}
+    </div>
+}
+
 const TaskPanelBody = observer(() => (
     <ManageList title="Tasks" onCreate={showCreateTaskDialog}>
         {
             taskStore.status.status === 'LOADING' ? <Typography>Loading...</Typography> :
                 taskStore.status.tasks.map(t => (
-                    <ManageListItem onDelete={() => deleteTask(t.id)} key={t.id}>
+                    <ManageListItem onDelete={() => deleteTask(t.id)} key={t.id} buttons={TaskPanelBodyButtons(t)}>
                         {t.url} [{t.status}] by {t.workerTitle} ({t.workerId})
                     </ManageListItem>
                 ))

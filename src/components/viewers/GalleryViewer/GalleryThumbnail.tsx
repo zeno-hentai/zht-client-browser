@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { CardContent, Box, CardMedia, Typography } from '@material-ui/core';
-import { ZHTItemViewerOptions } from '../../../types';
+import { ZHTItemThumbnailOptions } from '../../../types';
 import { GalleryMeta } from 'zht-client-api';
 import { arrayToDataUrl, getExt } from './utils';
 
@@ -15,10 +15,10 @@ type ImageUrlStatus = {
 }
 
 
-export const GalleryThumbnail = (props: ZHTItemViewerOptions<GalleryMeta>) => {
+export const GalleryThumbnail = (props: ZHTItemThumbnailOptions<GalleryMeta>) => {
     const [imageUrl, setImageUrl] = useState<ImageUrlStatus>({status: 'LOADING'})
     async function loadImage(){
-        const nm = props.item.meta.files[0]
+        const nm = props.item.meta.preview
         let data : ArrayBuffer | null = null
         try {
             data = await props.downloadFile(nm)
@@ -53,8 +53,5 @@ export const GalleryThumbnail = (props: ZHTItemViewerOptions<GalleryMeta>) => {
                     <Typography>Loading...</Typography>
                 </CardContent>
         }
-        <CardContent>
-            <Typography>{props.item.meta.title}</Typography>
-        </CardContent>
     </Box>
 }
