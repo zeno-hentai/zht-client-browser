@@ -16,10 +16,19 @@ const keyCodeMap: {[key:number]: ZHTSignalType} = {
 }
 
 export function initializeKeyboardSignals(){
+    window.addEventListener('keydown', evt => {
+        const sig = keyCodeMap[evt.keyCode]
+        if(sig){
+            evt.preventDefault()
+        }
+        return !sig
+    }, false)
     window.addEventListener('keyup', evt => {
         const sig = keyCodeMap[evt.keyCode]
         if(sig){
+            evt.preventDefault()
             zhtSignal.emit(sig)
         }
-    })
+        return !sig
+    }, true)
 }

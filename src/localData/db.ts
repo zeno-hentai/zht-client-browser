@@ -104,6 +104,7 @@ ZHTDatabase.prototype.updateItems = async function(items: ListedItemIndex<any>[]
                 })
                 continue
             }
+            const item = it.item
             const encryptedMeta = await aesEncryptWrapped(JSON.stringify(it.item.meta), localKey)
             const encryptedKey = await aesEncryptWrapped(it.item.key, localKey)
             const encryptedItem: ZhtItemData = {
@@ -120,8 +121,8 @@ ZHTDatabase.prototype.updateItems = async function(items: ListedItemIndex<any>[]
                 encryptedMappedFilename: await aesEncryptWrapped(fm, localKey)
             })))
             await this.items.put(encryptedItem)
-            await this.tags.where("id").noneOf(it.item.tags.map(t => t.id)).delete()
-            // await this.files.where(["itemId", "hashedFilename"]).noneOf(files.map(({itemId, hashedFilename}) => [itemId, hashedFilename])).delete()
+            await this.tags.where("itemId").equals(it.id).and(x => item.tags.every(t => t.id !== x.id)).delete()
+            await this.files.where("itemId").equals(it.id).and(x => files.every(f => f.hashedFilename !== x.hashedFilename)).delete()
             // FIXME: Delete unneeded files
             for(let t of it.item.tags){
                 const encryptedTag: ZhtTagData = {
@@ -140,18 +141,11 @@ ZHTDatabase.prototype.updateItems = async function(items: ListedItemIndex<any>[]
 }
 
 async function convertItem(db: ZHTDatabase, it: ZhtItemData, localKey: string): Promise<ListedItemIndex<any>> {
-    if(it.status === 'UNKNOWN_TYPE'){
+    if(it.status !== 'OK'){
         return {
             id: it.id,
-            status: it.status
+            status: it.status as any
         }
-    }else if(it.status === 'INVALID_META'){
-        return {
-            id: it.id,
-            status: it.status
-        }
-    }else if(it.status !== 'OK'){
-        return zError("Unknown error.")
     }
     const meta: ZHTBaseMeta<any> = JSON.parse(await aesDecryptWrapped(it.encryptedMeta, localKey))
     const key = await aesDecryptWrapped(it.encryptedKey, localKey)
@@ -177,6 +171,9 @@ async function convertItem(db: ZHTDatabase, it: ZhtItemData, localKey: string): 
 }
 
 ZHTDatabase.prototype.getItem = async function (itemId: number, {localKey}: LocalKeyData): Promise<ListedItemIndex<any> | null> {
+    if(this.hasBeenClosed()){
+        await this.open()
+    }
     return await this.transaction("r", [this.items, this.tags, this.files], async () => {
         const item = await this.items.where("id").equals(itemId).first()
         if(!item){
@@ -211,6 +208,9 @@ ZHTDatabase.prototype.queryItemsByTag = async function(tags: string[], {offset, 
 }
 
 ZHTDatabase.prototype.cachedFileExists = async function (mappedName: string): Promise<boolean> {
+    if(this.hasBeenClosed()){
+        await this.open()
+    }
     return await this.transaction("r", [this.cachedFile], async () => {
         const ct = await this.cachedFile.where('mappedName').equals(mappedName).count()
         return ct != 0
@@ -218,6 +218,9 @@ ZHTDatabase.prototype.cachedFileExists = async function (mappedName: string): Pr
 }
 
 ZHTDatabase.prototype.getCachedFileOrNull = async function (mappedName: string, {localKey}: DBKeys): Promise<ArrayBuffer | null>{
+    if(this.hasBeenClosed()){
+        await this.open()
+    }
     return await this.transaction("r", [this.cachedFile], async () => {
         const cachedFile = await this.cachedFile.where("mappedName").equals(mappedName).first()
         if(!cachedFile){
@@ -229,6 +232,9 @@ ZHTDatabase.prototype.getCachedFileOrNull = async function (mappedName: string, 
 ZHTDatabase.prototype.putCachedFile = async function (mappedName: string, itemId: number, data: ArrayBuffer, {localKey}: DBKeys): Promise<void>{
     const encryptedData = await aesEncrypt(data, localKey)
     const size = encryptedData.byteLength
+    if(this.hasBeenClosed()){
+        await this.open()
+    }
     await this.transaction("rw", [this.cachedFile, this.cachedFileSize], async () => {
         await this.cachedFile.put({mappedName, itemId, encryptedData})
         await this.cachedFileSize.put({
@@ -264,6 +270,9 @@ ZHTDatabase.prototype.clearData = async function (): Promise<void> {
 }
 
 ZHTDatabase.prototype.getFileCacheSize = async function (itemId: number): Promise<number> {
+    if(this.hasBeenClosed()){
+        await this.open()
+    }
     return await this.transaction("r", this.cachedFileSize, async () => {
         const rec = await this.cachedFileSize.where('itemId').equals(itemId).toArray()
         return sum(rec.map(r => r.size))
@@ -271,6 +280,9 @@ ZHTDatabase.prototype.getFileCacheSize = async function (itemId: number): Promis
 }
 
 ZHTDatabase.prototype.pruneFileCache = async function (itemId: number): Promise<void> {
+    if(this.hasBeenClosed()){
+        await this.open()
+    }
     await this.transaction("rw", [this.cachedFile, this.cachedFileSize], async () => {
         await this.cachedFile.where('itemId').equals(itemId).delete()
         await this.cachedFileSize.where('itemId').equals(itemId).delete()

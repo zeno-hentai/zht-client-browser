@@ -9,5 +9,7 @@ export type ListedItemIndex<Type extends string> = {id: number} & (
         status: 'UNKNOWN_TYPE'
     } | {
         status: 'INVALID_META'
+    } | {
+        status: 'EXCEPTION'
     }
 )

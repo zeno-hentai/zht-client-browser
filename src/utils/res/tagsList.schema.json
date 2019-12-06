@@ -1,0 +1,12 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$ref": "#/definitions/TagList",
+    "definitions": {
+        "TagList": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        }
+    }
+}

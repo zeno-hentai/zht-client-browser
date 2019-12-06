@@ -9,6 +9,8 @@ import MoreVertIcon from '@material-ui/icons/MoreVert'
 import { zhtHistory } from '..';
 import { PopoverPosition } from '@material-ui/core/Popover';
 import { CSSProperties } from '@material-ui/styles';
+import { exportZipFile } from '../../../utils/zip';
+import fileSaver from 'file-saver'
 
 interface ItemListDisabledProps {
     id: number
@@ -62,12 +64,17 @@ const PruneButton = (props: {itemId: number}) => {
     useEffect(() => {loadCacheSize()}, [])
     return <MenuItem onClick={prune}>Prune ({sizeText})</MenuItem>
 }
+const titleContainerStyle: CSSProperties = {overflowX: 'hidden', maxWidth: '100%', maxHeight: '3rem', overflowY: 'auto', fontSize: '1rem'}
 
-const titleStyle: CSSProperties = {fontSize: '1rem', overflowX: 'hidden', whiteSpace: 'nowrap'}
+async function exportItem(props: ItemListThumbnailProps) {
+    const data = await exportZipFile(props.item, props.files)
+    const blob = new Blob([data])
+    fileSaver.saveAs(blob, `${props.item.meta.title}.zht.zip`)
+}
 
 export const ItemListThumbnail = (props: ItemListThumbnailProps) => {
     const [anchorEl, setAnchorEl] = useState<PopoverPosition | undefined>(undefined)
-    
+    const onClick = () => zhtHistory.push(`/view/${props.item.id}`, {previousPath: zhtHistory.location.pathname})
     return <Card>
         <Menu 
             open={!!anchorEl} 
@@ -76,19 +83,23 @@ export const ItemListThumbnail = (props: ItemListThumbnailProps) => {
             anchorReference="anchorPosition"
             >
             <PruneButton itemId={props.item.id}/>
-            <MenuItem button onClick={() => deleteItem(props.item.id)}>DELETE</MenuItem>
+            <MenuItem button onClick={() => exportItem(props)}>Export</MenuItem>
+            <MenuItem button onClick={() => deleteItem(props.item.id)}>Delete</MenuItem>
         </Menu>
         <CardHeader
-            title={props.item.meta.title}
-            titleTypographyProps={{style: titleStyle}}
+            title={
+                <CardActionArea onClick={onClick}>
+                    <Typography style={titleContainerStyle}>{props.item.meta.title}</Typography>
+                </CardActionArea>
+            }
+            disableTypography
             action={
-                <IconButton aria-label="settings">
+                <IconButton style={{zIndex: 10000}} aria-label="settings" onClick={(evt) => setAnchorEl({top: evt.clientY, left: evt.clientX})}>
                   <MoreVertIcon />
                 </IconButton>
               }
-              onClick={(evt) => setAnchorEl({top: evt.clientY, left: evt.clientX})}
         />
-        <CardActionArea onClick={() => zhtHistory.push(`/view/${props.item.id}`, {previousPath: zhtHistory.location.pathname})}>
+        <CardActionArea onClick={onClick}>
             {renderViewer(props)}
         </CardActionArea>
     </Card>

@@ -49,10 +49,16 @@ export async function pullItemsData(tags: string[], page: number) {
     await zhtDB.deleteItems(deletedItemId)
     let idx = 0
     for(let id of itemIdList){
+        let checkedItem: ListedItemIndex<any> | null = null 
         itemStore.updateProcess((deletedItemId.length + idx) / (deletedItemId.length + itemIdList.length))
-        const item = await client.getItem(id, currentStatus.localKey.userPrivateKey, t => t)
-        const files = await client.getFileMap(item.id, item.key)
-        const checkedItem = await checkItem(item, files)
+        try{
+            const item = await client.getItem(id, currentStatus.localKey.userPrivateKey, t => t)
+            const files = await client.getFileMap(item.id, item.key)
+            checkedItem = await checkItem(item, files)
+        }catch(err){
+            console.error(err)
+            checkedItem = {id, status: 'EXCEPTION'}
+        }
         await zhtDB.updateItems([checkedItem], currentStatus.localKey)
         idx++
     }

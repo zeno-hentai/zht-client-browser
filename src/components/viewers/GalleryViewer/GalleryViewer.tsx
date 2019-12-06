@@ -9,6 +9,7 @@ import { zhtHistory } from '../../routes';
 import { zhtSignal } from '../../../actions/base';
 import { toSearchPage } from '../../../actions/search';
 import {times} from 'lodash'
+import { scrollDownward, scrollUpward, backToHome } from '../../../actions/ui';
 
 const imgStyle: CSSProperties = {
     maxWidth: '100%'
@@ -46,7 +47,9 @@ const PageBase = ({page, item, fileMap}: PageBaseProps) => {
         const h = zhtSignal.register()
         h.on('LEFT', previousPage)
         h.on('RIGHT', nextPage)
-        h.on('BACK', () => zhtHistory.push('/'))
+        h.on('BACK', backToHome)
+        h.on('DOWN', scrollDownward)
+        h.on('UP', scrollUpward)
         loadPage()
         return () => h.close()
     }, [])
