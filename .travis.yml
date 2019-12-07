@@ -9,6 +9,6 @@ deploy:
   provider: releases
   api_key:
     secure: X+g8eJuZVVw1KxziaJJHMwhFDtUq5OpS15l89ZtvDm76jwQBz8TWgh/skQiniFVgGNxZ+j3Kke5JQsXyXKtPPwafujE8PK1Cr4lrc7aWIuXs+MgpVtn6OebDAns8ocB5kldtSusz2q0tpNRMri0ErdHYoQwkRhK2QtH0QXRI1/KfjwbfvA2ZxuCE5Jh5StaXFVvhP3oZiRLuT0pPTz1/b/5r5dKJXZha2JqKnY30rLcslIhnpxr+jenWi6kwKPcWlE2ui4KmO4ZD53AQw6ZtrVCMUxGzK6nxEjc58Y/8A2g9BjLJtHgxMrzKZtPWi4eXMG13Kgyks4sWBAAnyB4dSxKS9EnRIK5iBwceFqxccjQ2rY8bPyZiNRLvQPQZeGZ4y9I6xN55bFcfCdTrPcB6cCzoGtxfTELws5euHLwEG6cWBVMHnt1fAn7Ttz9yu+K2YbdTCQjRCKPHmEFEBuIcoDBvb7jUl6VqH3Os25zwAzfNxQg+on9G66reZx/2KFEuvAVD8G288aidULromXxneMOlHvs0S12mklNGwYI5lrdD+dFsEKDIZAHC7/+pBt1qaWS8NXXs1lEQnnQe5ySxkk4ZRyN7p9MRgu6unDEnpjotZOrTr7pOhT5/q+TPIzt14kyb5FiXmHhPK/pUbmiXFrp6Fmo0TzAXP49YBgldbOc=
-  file: "./build/zht-client-browser.tgz"
+  file: "build/zht-client-browser.tgz"
   on:
     repo: zeno-hentai/zht-client-browser
