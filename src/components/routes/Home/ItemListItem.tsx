@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { ZHTBaseMeta, ItemIndexData } from "zht-client-api";
 import { ListedItemIndex } from "../../../types";
-import { Card, CardContent, Typography, CardActions, Button, CardActionArea, CardHeader, IconButton, Popover, Menu, MenuItem } from "@material-ui/core";
+import { Card, CardContent, Typography, CardActions, Button, CardActionArea, CardHeader, IconButton, Popover, Menu, MenuItem, Divider } from "@material-ui/core";
 import { deleteItem, loadCachedFile } from '../../../actions';
 import { viewerIndex } from '../../viewers';
 import { zhtDB } from '../../../actions/base';
@@ -11,6 +11,8 @@ import { PopoverPosition } from '@material-ui/core/Popover';
 import { CSSProperties } from '@material-ui/styles';
 import { exportZipFile } from '../../../utils/zip';
 import fileSaver from 'file-saver'
+import { itemStore } from '../../../store';
+import { toSearchPage } from '../../../actions/search';
 
 interface ItemListDisabledProps {
     id: number
@@ -46,7 +48,7 @@ function renderViewer({item, files}: ItemListThumbnailProps){
 }
 
 const PruneButtonCacheSize = ['B', 'KB', 'MB', 'GB']
-const PruneButton = (props: {itemId: number}) => {
+const PruneButton = (props: {itemId: number, open: boolean}) => {
     const [sizeText, setSizeText] = useState("...")
     async function loadCacheSize(){
         const size = await zhtDB.getFileCacheSize(props.itemId)
@@ -61,7 +63,11 @@ const PruneButton = (props: {itemId: number}) => {
         await zhtDB.pruneFileCache(props.itemId)
         await loadCacheSize()
     }
-    useEffect(() => {loadCacheSize()}, [])
+    useEffect(() => {
+        if(props.open){
+            loadCacheSize()
+        }
+    }, [props.open])
     return <MenuItem onClick={prune}>Prune ({sizeText})</MenuItem>
 }
 const titleContainerStyle: CSSProperties = {overflowX: 'hidden', maxWidth: '100%', maxHeight: '3rem', overflowY: 'auto', fontSize: '1rem'}
@@ -72,18 +78,33 @@ async function exportItem(props: ItemListThumbnailProps) {
     fileSaver.saveAs(blob, `${props.item.meta.title}.zht.zip`)
 }
 
+function addTagToSearchBar(tag: string){
+    const oldTags = itemStore.status.status === 'LOADED_DATA' ? itemStore.status.tags : []
+    const newTags = [...oldTags, tag]
+    toSearchPage(newTags.join(' '))
+}
+
 export const ItemListThumbnail = (props: ItemListThumbnailProps) => {
     const [anchorEl, setAnchorEl] = useState<PopoverPosition | undefined>(undefined)
     const onClick = () => zhtHistory.push(`/view/${props.item.id}`, {previousPath: zhtHistory.location.pathname})
-    return <Card>
+    const opened = !!anchorEl
+    return (<Card>
         <Menu 
-            open={!!anchorEl} 
+            open={opened} 
             onClose={() => setAnchorEl(undefined)}
             anchorPosition={anchorEl}
             anchorReference="anchorPosition"
             >
-            <PruneButton itemId={props.item.id}/>
+            {props.item.tags.map(t => 
+                <MenuItem 
+                    key={t.id} 
+                    onClick={() => addTagToSearchBar(t.tag)}
+                    >{t.tag}</MenuItem>
+            )}
+            <Divider/>
+            <PruneButton itemId={props.item.id} open={opened}/>
             <MenuItem button onClick={() => exportItem(props)}>Export</MenuItem>
+            <Divider/>
             <MenuItem button onClick={() => deleteItem(props.item.id)}>Delete</MenuItem>
         </Menu>
         <CardHeader
@@ -94,7 +115,7 @@ export const ItemListThumbnail = (props: ItemListThumbnailProps) => {
             }
             disableTypography
             action={
-                <IconButton style={{zIndex: 10000}} aria-label="settings" onClick={(evt) => setAnchorEl({top: evt.clientY, left: evt.clientX})}>
+                <IconButton aria-label="settings" onClick={(evt) => setAnchorEl({top: evt.clientY, left: evt.clientX})}>
                   <MoreVertIcon />
                 </IconButton>
               }
@@ -102,5 +123,5 @@ export const ItemListThumbnail = (props: ItemListThumbnailProps) => {
         <CardActionArea onClick={onClick}>
             {renderViewer(props)}
         </CardActionArea>
-    </Card>
+    </Card>)
 }

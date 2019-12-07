@@ -1,5 +1,6 @@
 import { ZHTSignalType } from "../localData"
 import { zhtSignal } from "./base"
+import { useEffect } from "react"
 
 
 // https://keycode.info/
@@ -31,4 +32,26 @@ export function initializeKeyboardSignals(){
         }
         return !sig
     }, true)
+}
+
+type UseSignalProps = Partial<Record<ZHTSignalType, () => void>>
+
+export function useSignal(sig: ZHTSignalType, cb: () => void){
+    useEffect(() => {
+        const h = zhtSignal.register()
+        h.on(sig, cb)
+        return () => h.close()
+    })
+}
+
+export function useSignals(callbacks: UseSignalProps) {
+    useEffect(() => {
+        const h = zhtSignal.register()
+        for(let [sig, cb] of Object.entries(callbacks)){
+            if(cb){
+                h.on(sig as ZHTSignalType, cb)
+            }
+        }
+        return () => h.close()
+    })
 }
