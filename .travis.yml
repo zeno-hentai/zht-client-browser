@@ -1,14 +1,14 @@
 language: node
 node_js: 10
 before_script: yarn install
-script: yarn build
+script: yarn build-package
 cache:
   directories:
   - "node_modules"
-# deploy:
-#   provider: releases
-#   api_key:
-#     secure: nWhyP/7kAare8NYgF/btfiZR5uP/6nZTSfCUyncQj4VqYUzvAs561v4xZLnIoiUOto0k/oRB+WY52jtIBQIxP5KP4RRCrUz0hfZha2dIcn3u4xOyaF79Us1rkXkY7HP5vbXmbmhunopU0+AuTs8yvZ3HQc4vGidqYXsYgz6VaBOEegti0wgRAzZe8K6cVcSvwx/+gLPxltAMbRERpAVa7CA8OvwBcoZhVojDTAUlIJLRTdKG+JHH2HaszsR/fBkelR83CtMx/Olnq6cSuWwCNaFtOZGZhK0Pww0YCJ/4uJBGpiKz0stGC/hr993g3DSJvXEU0vTR9LNJ/jhJgHBLL9xMBFvPcRtWzArl/PEYvk1AhlLUwkgNsqrjpSb/xMDFN7bJSv4fw1BfGMe1d706g8E/E+pNjCNfiG922N7r+HmQTN7mLjukbxeutzISVBhi+z76v3iEytlZFw/o88LzEC9mm+uSS3k70Sx9UmvKGwjnmPUJ0GUUEp/P5AteyjBC4FLgETXubsOUMeXR4MleY43IR1nDMkwP0P7X041i6XE1jJMdFK89O9PnK0KukB53vEAw/zLW4ofAPFKDsfQz7i7pWMxy8F68J/+MDZlicEiIdAdSabZ+s9wvGnfzVkDdFrdRRPj2cGh0hiQw/QUmsP5lIooISReVBUSWn/A3Itk=
-#   file: ./build/zht-client-browser.tgz
-#   on:
-#     repo: zeno-hentai/zht-client-browser
+deploy:
+  provider: releases
+  api_key:
+    secure: nWhyP/7kAare8NYgF/btfiZR5uP/6nZTSfCUyncQj4VqYUzvAs561v4xZLnIoiUOto0k/oRB+WY52jtIBQIxP5KP4RRCrUz0hfZha2dIcn3u4xOyaF79Us1rkXkY7HP5vbXmbmhunopU0+AuTs8yvZ3HQc4vGidqYXsYgz6VaBOEegti0wgRAzZe8K6cVcSvwx/+gLPxltAMbRERpAVa7CA8OvwBcoZhVojDTAUlIJLRTdKG+JHH2HaszsR/fBkelR83CtMx/Olnq6cSuWwCNaFtOZGZhK0Pww0YCJ/4uJBGpiKz0stGC/hr993g3DSJvXEU0vTR9LNJ/jhJgHBLL9xMBFvPcRtWzArl/PEYvk1AhlLUwkgNsqrjpSb/xMDFN7bJSv4fw1BfGMe1d706g8E/E+pNjCNfiG922N7r+HmQTN7mLjukbxeutzISVBhi+z76v3iEytlZFw/o88LzEC9mm+uSS3k70Sx9UmvKGwjnmPUJ0GUUEp/P5AteyjBC4FLgETXubsOUMeXR4MleY43IR1nDMkwP0P7X041i6XE1jJMdFK89O9PnK0KukB53vEAw/zLW4ofAPFKDsfQz7i7pWMxy8F68J/+MDZlicEiIdAdSabZ+s9wvGnfzVkDdFrdRRPj2cGh0hiQw/QUmsP5lIooISReVBUSWn/A3Itk=
+  file: ./build/zht-client-browser.tgz
+  on:
+    repo: zeno-hentai/zht-client-browser

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Typography, Dialog, DialogTitle, DialogContent, DialogContentText, TextField, DialogActions, Button, Popover, Snackbar } from '@material-ui/core'
+import { Typography, Dialog, DialogTitle, DialogContent, TextField, DialogActions, Button, Snackbar } from '@material-ui/core'
 import { observer } from 'mobx-react-lite'
 import { Provider } from 'mobx-react'
 import { observable, action } from 'mobx';
@@ -83,7 +83,6 @@ async function deleteToken(tokenId: number){
 const CreatedTokenListItem = ({item}: {item: APITokenCreateResponse}) => {
     const [show, setShow] = useState(false)
     return <ManageListItem onDelete={() => deleteToken(item.id)} onEnter={async () => {
-        const publicKeySig = await sha256Hash(authStore.userInfo.publicKey)
         await navigator.clipboard.writeText(item.token)
         setShow(true)
     }}>

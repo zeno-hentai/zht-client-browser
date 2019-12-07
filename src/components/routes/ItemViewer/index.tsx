@@ -20,27 +20,29 @@ type ItemViewerStats = {
 export const ItemViewer = (props: RouteComponentProps<{id: string}>) => {
     const itemId = parseInt(props.match.params.id)
     const [status, setStatus] = useState<ItemViewerStats>({status: 'LOADING'})
-    async function loadItemData(){
-        const listedItem = await zhtDB.getItem(itemId, authStore.localKey)
-        if(listedItem === null){
-            setStatus({
-                status: 'FAILED',
-                error: 'Item not found'
-            })
-        }else if(listedItem.status === 'OK'){
-            const {item, files, type} = listedItem
-            setStatus({
-                status: 'DONE',
-                type, item, files
-            })
-        }else{
-            setStatus({
-                status: 'FAILED',
-                error: `Invalid item: ${listedItem.status}`
-            })
+    useEffect(() => {
+        async function loadItemData(){
+            const listedItem = await zhtDB.getItem(itemId, authStore.localKey)
+            if(listedItem === null){
+                setStatus({
+                    status: 'FAILED',
+                    error: 'Item not found'
+                })
+            }else if(listedItem.status === 'OK'){
+                const {item, files, type} = listedItem
+                setStatus({
+                    status: 'DONE',
+                    type, item, files
+                })
+            }else{
+                setStatus({
+                    status: 'FAILED',
+                    error: `Invalid item: ${listedItem.status}`
+                })
+            }
         }
-    }
-    useEffect(() => {loadItemData()}, [itemId])
+        loadItemData()
+    }, [itemId])
     if(status.status === 'LOADING'){
         return <div>Loading...</div>
     }else if(status.status === 'FAILED'){

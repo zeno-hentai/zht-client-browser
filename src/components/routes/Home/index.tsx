@@ -24,11 +24,12 @@ async function queryItems(page: number, encryptedTags?: string){
 }
 
 export const Home = (props1: RouteComponentProps<HomeProps>) => {
+    const encryptedTags = props1.match.params.encryptedTags || ''
     const C = (props2: RouteComponentProps<{page?: string}>) => {
         useEffect(() => {
             const page = props2.match.params.page ? parseInt(props2.match.params.page) : 0
-            queryItems(page, props1.match.params.encryptedTags)
-        }, [props1.match.params.encryptedTags, props2.match.params.page])
+            queryItems(page, encryptedTags)
+        }, [props2.match.params.page])
         return <HomeBody/>
     }
     return (<Route>

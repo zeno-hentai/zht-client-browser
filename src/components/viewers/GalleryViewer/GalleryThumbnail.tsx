@@ -17,25 +17,25 @@ type ImageUrlStatus = {
 
 export const GalleryThumbnail = (props: ZHTItemThumbnailOptions<GalleryMeta>) => {
     const [imageUrl, setImageUrl] = useState<ImageUrlStatus>({status: 'LOADING'})
-    async function loadImage(){
-        const nm = props.item.meta.preview
-        let data : ArrayBuffer | null = null
-        try {
-            data = await props.downloadFile(nm)
-        }catch(error){
-            setImageUrl({
-                status: 'ERROR',
-                error
-            })
-        }
-        if(data){
-            const url = await arrayToDataUrl(data, getExt(nm))
-            setImageUrl({status: 'DONE', url})
-        }
-    }
     useEffect(() => {
+        async function loadImage(){
+            const nm = props.item.meta.preview
+            let data : ArrayBuffer | null = null
+            try {
+                data = await props.downloadFile(nm)
+            }catch(error){
+                setImageUrl({
+                    status: 'ERROR',
+                    error
+                })
+            }
+            if(data){
+                const url = await arrayToDataUrl(data, getExt(nm))
+                setImageUrl({status: 'DONE', url})
+            }
+        }
         loadImage()
-    }, [])
+    }, [props])
     return <Box>
         {
             imageUrl.status === 'DONE' ?

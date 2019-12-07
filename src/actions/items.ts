@@ -1,9 +1,8 @@
-import { ZHTClientAPI, ZHTBaseMeta, ItemIndexData } from 'zht-client-api';
+import { ZHTBaseMeta, ItemIndexData } from 'zht-client-api';
 import { itemStore } from '../store/item';
 import { authStore } from '../store/auth';
 import { zError } from './utils';
 import { getUpdateTimeStamp, saveUpdateTimeStamp } from '../localData/localStorage';
-import {chunk} from 'lodash'
 import moment from 'moment';
 import { ListedItemIndex } from '../types/item';
 import Ajv from 'ajv'
@@ -11,7 +10,6 @@ import { viewerIndex } from '../components/viewers';
 import { client, zhtDB } from './base';
 import { getOffsetLimit } from '../utils/paging';
 
-const UPDATE_CHUNK = 20
 export const HomePageSize = 50
 
 async function checkItem(item: ItemIndexData, files: {[key: string]: string}): Promise<ListedItemIndex<any>> {

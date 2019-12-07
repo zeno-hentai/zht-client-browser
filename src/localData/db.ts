@@ -1,7 +1,6 @@
 import Dexie from 'dexie';
-import { aesEncrypt, sha256Hash, ItemIndexData, ZHTBaseMeta, aesDecrypt, ItemTagData, b64encode, b64decode, aesEncryptWrapped, aesDecryptWrapped } from 'zht-client-api';
+import { aesEncrypt, sha256Hash, ZHTBaseMeta, aesDecrypt, ItemTagData, aesEncryptWrapped, aesDecryptWrapped } from 'zht-client-api';
 import { ListedItemIndex } from '../types';
-import { zError } from '../actions/utils';
 import { LocalKeyData } from './localStorage';
 import { sum, intersection } from 'lodash'
 

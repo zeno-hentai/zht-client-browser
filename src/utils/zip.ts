@@ -1,5 +1,5 @@
 import JSZip from 'jszip'
-import { ItemIndexData, ZHTBaseMeta, ItemTagData } from 'zht-client-api';
+import { ItemIndexData, ZHTBaseMeta } from 'zht-client-api';
 import { client } from '../actions/base';
 import { loadCachedFile } from '../actions';
 import { authStore } from '../store';

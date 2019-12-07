@@ -40,13 +40,6 @@ const PageBase = ({page, item, fileMap, viewerMode}: PageBaseProps) => {
         zhtHistory.push(`/view/${item.id}/${page}?zoom=${nextZoomMode[viewerMode.type].type}`)
     }
 
-    async function loadPage(){
-        const name = item.meta.files[page]
-        const data = await loadCachedFile(name, item, fileMap, (p) => console.log(p))
-        const dataURL = await arrayToDataUrl(data, getExt(name))
-        setDataURL(dataURL)
-    }
-
     function onClick(evt: React.MouseEvent<HTMLImageElement>){
         const x = evt.pageX
         if(x > window.innerWidth / 2){
@@ -64,8 +57,14 @@ const PageBase = ({page, item, fileMap, viewerMode}: PageBaseProps) => {
     useSignal('SWITCH', toNextZoom)
 
     useEffect(() => {
+        async function loadPage(){
+            const name = item.meta.files[page]
+            const data = await loadCachedFile(name, item, fileMap, (p) => console.log(p))
+            const dataURL = await arrayToDataUrl(data, getExt(name))
+            setDataURL(dataURL)
+        }
         loadPage()
-    }, [])
+    }, [item, fileMap, page])
 
 
     return <div>
@@ -92,7 +91,7 @@ const PageBase = ({page, item, fileMap, viewerMode}: PageBaseProps) => {
         </Fab>
         <Grid container>
             <Grid item xs={12} style={viewerMode.containerStyle}>
-                {dataURL ? <img onClick={onClick} style={viewerMode.imageStyle} src={dataURL}/> : <div>Loading...</div>}
+                {dataURL ? <img alt={item.meta.title} onClick={onClick} style={viewerMode.imageStyle} src={dataURL}/> : <div>Loading...</div>}
             </Grid>
             <Grid item xs={12}>
                 <Typography>{item.meta.title}</Typography>
@@ -106,14 +105,14 @@ const PageBase = ({page, item, fileMap, viewerMode}: PageBaseProps) => {
 
 const CacheAllBar = ({item, fileMap}: ZHTItemViewerOptions<GalleryMeta>) => {
     const [cacheAllStatus, setCacheAllStatus] = useState<CacheAllFilesStatus>({status: 'OnProgress', progress: 0})
-    async function cacheAll(){
-        const fileList = times(item.meta.pageNumber).map(i => fileMap[item.meta.files[i]])
-        await cacheAllFiles(item, fileList, progress => setCacheAllStatus({status: 'OnProgress', progress}))
-        setCacheAllStatus({status: 'Done'})
-    }
     useEffect(() => {
+        async function cacheAll(){
+            const fileList = times(item.meta.pageNumber).map(i => fileMap[item.meta.files[i]])
+            await cacheAllFiles(item, fileList, progress => setCacheAllStatus({status: 'OnProgress', progress}))
+            setCacheAllStatus({status: 'Done'})
+        }
         cacheAll()
-    }, [item.id])
+    }, [item, fileMap])
     if(cacheAllStatus.status === 'OnProgress'){
         return <div>Caching... {(cacheAllStatus.progress * 100).toFixed(2)} %</div>
     }else{

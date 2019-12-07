@@ -50,24 +50,24 @@ function renderViewer({item, files}: ItemListThumbnailProps){
 const PruneButtonCacheSize = ['B', 'KB', 'MB', 'GB']
 const PruneButton = (props: {itemId: number, open: boolean}) => {
     const [sizeText, setSizeText] = useState("...")
-    async function loadCacheSize(){
-        const size = await zhtDB.getFileCacheSize(props.itemId)
-        if(size === 0){
-            setSizeText('0 B')
-        }else{
-            const level = Math.min(Math.floor(Math.log(size) / Math.log(1024)), 3)
-            setSizeText(`${(size / Math.pow(1024, level)).toFixed(0)} ${PruneButtonCacheSize[level]}`)
-        }
-    }
     async function prune(){
         await zhtDB.pruneFileCache(props.itemId)
-        await loadCacheSize()
+        setSizeText('0 B')
     }
     useEffect(() => {
+        async function loadCacheSize(){
+            const size = await zhtDB.getFileCacheSize(props.itemId)
+            if(size === 0){
+                setSizeText('0 B')
+            }else{
+                const level = Math.min(Math.floor(Math.log(size) / Math.log(1024)), 3)
+                setSizeText(`${(size / Math.pow(1024, level)).toFixed(0)} ${PruneButtonCacheSize[level]}`)
+            }
+        }
         if(props.open){
             loadCacheSize()
         }
-    }, [props.open])
+    }, [props.open, props.itemId])
     return <MenuItem onClick={prune}>Prune ({sizeText})</MenuItem>
 }
 const titleContainerStyle: CSSProperties = {overflowX: 'hidden', maxWidth: '100%', maxHeight: '3rem', overflowY: 'auto', fontSize: '1rem'}

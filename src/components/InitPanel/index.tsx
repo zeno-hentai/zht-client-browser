@@ -1,5 +1,4 @@
 import React, { CSSProperties } from 'react';
-import Grid from '@material-ui/core/Grid';
 import { Paper, Button, Typography } from '@material-ui/core';
 import { AuthPanel } from './AuthPanel';
 import { observer } from 'mobx-react';
