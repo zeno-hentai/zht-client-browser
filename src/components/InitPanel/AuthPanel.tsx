@@ -1,7 +1,7 @@
 import React from 'react'
 import { observer } from "mobx-react";
 import { useState } from "react";
-import { Tabs, Tab, Grid, TextField, Button, Typography, Stepper, Step, StepLabel } from '@material-ui/core';
+import { Tabs, Tab, TextField, Button, Typography, Stepper, Step, StepLabel } from '@material-ui/core';
 import { authStore, LocalKeyStatus } from '../../store/auth';
 import { authRegister, authLogin, authFinishAuth } from '../../actions';
 

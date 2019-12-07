@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import {Provider as MobxProvider, observer} from 'mobx-react'
 import './App.css';
 import { globalStores } from './store';

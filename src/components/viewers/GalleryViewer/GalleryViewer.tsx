@@ -1,7 +1,7 @@
-import React, { useEffect, useState, CSSProperties, useLayoutEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { GalleryMeta, ItemIndexData } from 'zht-client-api';
 import { ZHTItemViewerOptions } from '../../../types';
-import { Grid, Button, Typography, Chip, Fab } from '@material-ui/core';
+import { Grid, Typography, Chip, Fab } from '@material-ui/core';
 import ArrowBackIcon from '@material-ui/icons/ArrowBack';
 import ArrowLeftIcon from '@material-ui/icons/ArrowLeft';
 import ArrowRightIcon from '@material-ui/icons/ArrowRight';
@@ -10,7 +10,6 @@ import { loadCachedFile, cacheAllFiles, useSignal } from '../../../actions';
 import { arrayToDataUrl, getExt } from './utils';
 import { RouteComponentProps, Route } from 'react-router';
 import { zhtHistory } from '../../routes';
-import { zhtSignal } from '../../../actions/base';
 import { toSearchPage } from '../../../actions/search';
 import {times} from 'lodash'
 import { scrollDownward, scrollUpward, backToHome } from '../../../actions/ui';

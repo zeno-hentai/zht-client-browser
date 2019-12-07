@@ -213,7 +213,7 @@ ZHTDatabase.prototype.cachedFileExists = async function (mappedName: string): Pr
     }
     return await this.transaction("r", [this.cachedFile], async () => {
         const ct = await this.cachedFile.where('mappedName').equals(mappedName).count()
-        return ct != 0
+        return ct !== 0
     })
 }
 

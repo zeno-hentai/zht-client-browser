@@ -1,4 +1,4 @@
-import { aesGenKey, aesEncrypt, sha256Hash, aesDecrypt, aesEncryptWrapped, aesDecryptWrapped } from 'zht-client-api';
+import { aesGenKey, sha256Hash, aesEncryptWrapped, aesDecryptWrapped } from 'zht-client-api';
 import uuid from 'uuid'
 import moment, { Moment } from 'moment';
 

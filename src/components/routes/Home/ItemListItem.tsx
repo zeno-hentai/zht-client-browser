@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { ZHTBaseMeta, ItemIndexData } from "zht-client-api";
 import { ListedItemIndex } from "../../../types";
-import { Card, CardContent, Typography, CardActions, Button, CardActionArea, CardHeader, IconButton, Popover, Menu, MenuItem, Divider } from "@material-ui/core";
+import { Card, CardContent, Typography, CardActions, Button, CardActionArea, CardHeader, IconButton, Menu, MenuItem, Divider } from "@material-ui/core";
 import { deleteItem, loadCachedFile } from '../../../actions';
 import { viewerIndex } from '../../viewers';
 import { zhtDB } from '../../../actions/base';

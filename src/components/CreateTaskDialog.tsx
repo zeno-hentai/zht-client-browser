@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import { WorkerInfo } from 'zht-client-api'
 import { client } from '../actions/base'
 import { authStore } from '../store'

@@ -1,8 +1,5 @@
 import React, { CSSProperties } from 'react'
 import { Route } from 'react-router'
-import { Fab } from '@material-ui/core'
-import DoneIcon from '@material-ui/icons/Done'
-import { zhtHistory } from '../index';
 import { TokenPanel } from './TokenPanel';
 import { WorkerPanel } from './WorkerPanel';
 import { TaskPanel } from './TaskPanel';
